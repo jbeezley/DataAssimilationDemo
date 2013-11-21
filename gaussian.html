@@ -8,13 +8,15 @@
     <script src="gaussian.js"></script>
     <script>
 function init() {
-    var g = Gaussian('#gaus');
     var i = 0;
+    function sigma() {
+        var x = 1 + Math.sin(i++/100);
+        return x*x;
+    }
+    var g = Gaussian(function () { return 0; }, sigma, '#gaus');
     function anim() {
         requestAnimationFrame(anim);
-        var x = Math.sin(i++/100.0);
-        x = x*x;
-        g(0,x);
+        g();
     }
     anim();
 }
@@ -34,6 +36,12 @@ body {
   fill: none;
   stroke: #000;
   shape-rendering: auto;
+}
+
+rect.gausBox {
+    fill: #fff;
+    stroke: #aaa;
+    fill-opacity: .7;
 }
 
 .gaussian {

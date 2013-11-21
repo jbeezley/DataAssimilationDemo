@@ -1,7 +1,7 @@
 /* global d3 */
 'use strict';
 
-function Gaussian(selection) {
+function Gaussian(mean, sigma, selection) {
     var n = 250;
     var margin = { top: 20, right: 20, bottom: 20, left: 40 },
         width = 400 - margin.left - margin.right,
@@ -24,27 +24,34 @@ function Gaussian(selection) {
         .attr('height', height + margin.top + margin.bottom)
       .append('g')
         .attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
-
-    svg.append('defs').append('clipPath')
-        .attr('id', 'clip')
-      .append('rect')
+    svg.append('svg:rect')
+        .attr('class', 'gausBox')
         .attr('width', width)
         .attr('height', height);
 
+    /*svg.append('defs').append('clipPath')
+        .attr('id', 'clip')
+      .append('rect')
+        .attr('width', width+5)
+        .attr('height', height+5);*/
+
     var path = svg.append('g')
-        .attr('clip-path', 'url(#clip)')
+        //.attr('clip-path', 'url(#clip)')
       .append('path')
         .datum([])
         .attr('class', 'gaussian')
         .attr('d', line);
-
-    function draw(mean, sigma) {
-        var t = d3.scale.linear().domain([0,n-1]).range([-2,2]);
+    
+    var t = d3.scale.linear().domain([0,n-1]);
+    var rng = d3.range(n);
+    function draw() {
+        var m = mean(), s = sigma();
+        t.range([m-5,m+5]);
         function gausDensity(x) {
-            var m = (t(x)-mean)/sigma;
-            return Math.exp( -m*m );
+            var a = (t(x)-m)/s;
+            return Math.exp( -0.5*a*a );
         }
-        var data = d3.range(n).map(gausDensity);
+        var data = rng.map(gausDensity);
         d3.select('.gaussian').datum(data).attr('d', line);
     }
 
