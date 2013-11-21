@@ -114,7 +114,7 @@ function init() {
         };
     }
     
-    var mod = new LorenzModel(new LorenzValues(5, 1, -7, 1));
+    var mod = new LorenzModel(new LorenzValues(5, 10, -7, 10, 25, 5));
     
     //ko.applyBindings(mod.values);
     //ko.applyBindings(mod.params);

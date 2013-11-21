@@ -10,10 +10,10 @@
 function init() {
     var i = 0;
     function sigma() {
-        var x = 1 + Math.sin(i++/100);
-        return x*x;
+        var x = Math.sin(i++/100);
+        return 1+x*x;
     }
-    var g = Gaussian(function () { return 0; }, sigma, '#gaus');
+    var g = Gaussian(-5, 5, function () { return 0; }, sigma, '#gaus', 'gaussian');
     function anim() {
         requestAnimationFrame(anim);
         g();

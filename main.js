@@ -12,7 +12,7 @@ function makeModelPlot(model) {
     var dataZ = d3.range(1).map(newValueZ);
     var margin = { top: 20, right: 20, bottom: 20, left: 40 },
         width = 960 - margin.left - margin.right,
-        height = 300 - margin.top - margin.bottom;
+        height = 150 - margin.top - margin.bottom;
 
     var x = d3.scale.linear()
         .domain([0, n-1])
@@ -34,47 +34,114 @@ function makeModelPlot(model) {
         .x(function (d, i) { return x(i); })
         .y(function (d, i) { return yz(d); });
 
-    var svg = d3.select('#model').append('svg')
+    var svgX = d3.select('#modelX').append('svg')
+        .attr('width', width + margin.left + margin.right)
+        .attr('height', height + margin.top + margin.bottom)
+      .append('g')
+        .attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
+    
+    var svgY = d3.select('#modelY').append('svg')
+        .attr('width', width + margin.left + margin.right)
+        .attr('height', height + margin.top + margin.bottom)
+      .append('g')
+        .attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
+    
+    var svgZ = d3.select('#modelZ').append('svg')
         .attr('width', width + margin.left + margin.right)
         .attr('height', height + margin.top + margin.bottom)
       .append('g')
         .attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
 
-    svg.append('defs').append('clipPath')
+    svgX.append('defs').append('clipPath')
         .attr('id', 'clip')
       .append('rect')
         .attr('width', width)
         .attr('height', height);
 
-    svg.append('g')
+    svgX.append('g')
         .attr('class', 'x axis')
         .attr('transform', 'translate(0,' + y(0) + ')')
         .call(d3.svg.axis().scale(x).orient('bottom').ticks([]));
 
-    svg.append('g')
+    svgX.append('g')
         .attr('class', 'y axis')
-        .call(d3.svg.axis().scale(y).orient('left'));
+        .call(d3.svg.axis().scale(y).orient('left').ticks([7]));
+    
+    svgY.append('defs').append('clipPath')
+        .attr('id', 'clip')
+      .append('rect')
+        .attr('width', width)
+        .attr('height', height);
 
-    var pathX = svg.append('g')
+    svgY.append('g')
+        .attr('class', 'x axis')
+        .attr('transform', 'translate(0,' + y(0) + ')')
+        .call(d3.svg.axis().scale(x).orient('bottom').ticks([]));
+
+    svgY.append('g')
+        .attr('class', 'y axis')
+        .call(d3.svg.axis().scale(y).orient('left').ticks([7]));
+    
+    svgZ.append('defs').append('clipPath')
+        .attr('id', 'clip')
+      .append('rect')
+        .attr('width', width)
+        .attr('height', height);
+
+    svgZ.append('g')
+        .attr('class', 'x axis')
+        .attr('transform', 'translate(0,' + y(0) + ')')
+        .call(d3.svg.axis().scale(x).orient('bottom').ticks([]));
+
+    svgZ.append('g')
+        .attr('class', 'y axis')
+        .call(d3.svg.axis().scale(yz).orient('left').ticks([7]));
+
+    var pathX = svgX.append('g')
         .attr('clip-path', 'url(#clip)')
       .append('path')
         .datum(dataX)
         .attr('class', 'lineX')
         .attr('d', line);
     
-    var pathY = svg.append('g')
+    var pathY = svgY.append('g')
         .attr('clip-path', 'url(#clip)')
       .append('path')
         .datum(dataY)
         .attr('class', 'lineY')
         .attr('d', line);
     
-    var pathZ = svg.append('g')
+    var pathZ = svgZ.append('g')
         .attr('clip-path', 'url(#clip)')
       .append('path')
         .datum(dataZ)
         .attr('class', 'lineZ')
         .attr('d', lineZ);
+    
+    svgX.append("text")
+        .attr("class", "y label")
+        .attr("text-anchor", "end")
+        .attr("x", 0)
+        .attr("y", height/2)
+        .attr('dx', '-1.75em')
+        .text('x');
+    
+    svgY.append("text")
+        .attr("class", "y label")
+        .attr("text-anchor", "end")
+        .attr("x", 0)
+        .attr("y", height/2)
+        .attr('dx', '-1.75em')
+        .text('y');
+    
+    svgZ.append("text")
+        .attr("class", "y label")
+        .attr("text-anchor", "end")
+        .attr("x", 0)
+        .attr("y", height/2)
+        .attr('dx', '-1.75em')
+        .text('z');
+
 
     tick();
     

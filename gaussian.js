@@ -1,8 +1,8 @@
 /* global d3 */
 'use strict';
 
-function Gaussian(mean, sigma, selection) {
-    var n = 250;
+function Gaussian(min, max, mean, sigma, selection, cls) {
+    var n = 100;
     var margin = { top: 20, right: 20, bottom: 20, left: 40 },
         width = 400 - margin.left - margin.right,
         height = 300 - margin.top - margin.bottom;
@@ -39,14 +39,14 @@ function Gaussian(mean, sigma, selection) {
         //.attr('clip-path', 'url(#clip)')
       .append('path')
         .datum([])
-        .attr('class', 'gaussian')
+        .attr('class', cls)
         .attr('d', line);
     
     var t = d3.scale.linear().domain([0,n-1]);
+    t.range([min,max]);
     var rng = d3.range(n);
     function draw() {
         var m = mean(), s = sigma();
-        t.range([m-5,m+5]);
         function gausDensity(x) {
             var a = (t(x)-m)/s;
             return Math.exp( -0.5*a*a );
