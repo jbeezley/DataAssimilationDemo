@@ -1,0 +1,36 @@
+
+<!DOCTYPE html>
+
+<html>
+<head>
+    <script src="knockout.js"></script>
+    <script src="http://d3js.org/d3.v3.min.js"></script>
+    <script src="gaussian.js"></script>
+</head>
+<style>
+/*
+body {
+  font: 10px sans-serif;
+}
+ */
+.axis {
+    font: 12px sans-serif;
+}
+.axis path,
+.axis line {
+  fill: none;
+  stroke: #000;
+  shape-rendering: auto;
+}
+
+.gaussian {
+  fill: none;
+  stroke: blue;
+  stroke-width: 1.5px;
+}
+
+</style>
+<body onload="Gaussian('#gaus')(0,1)">
+    <div id="gaus"></div>
+</body>
+</html>

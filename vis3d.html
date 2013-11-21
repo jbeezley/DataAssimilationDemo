@@ -1,0 +1,39 @@
+
+<!DOCTYPE html>
+
+<html>
+<head>
+    <script src="three.min.js"></script>
+    <script src="knockout.js"></script>
+    <script src="http://d3js.org/d3.v3.min.js"></script>
+    <script src="TrackballControls.js"></script>
+    <script src="vis3d.js"></script>
+    <script src="model.js"></script>
+</head>
+<body onload="init()">
+    <div id="model"></div>
+    <center>
+        <div data-bind="with: values">Values: <span data-bind="text: valString"></span></div>
+    <table>
+        <tr>
+        <td><button data-bind="click: setPause">Pause</button></td>
+        <td><button data-bind="click: values.reset">Reset</button></td>
+    </tr>
+    </table>
+    </center>
+    <table border="1">
+    <tr>
+        <td>Speed:</td><td><input type="range" min="0" max="10" data-bind="value: speed"></td>
+    </tr>
+    <tr>
+        <td>sigma</td><td><input type="number" min="1" max="20" data-bind="value: params.sigma"></td>
+    </tr>
+    <tr>
+        <td>rho</td><td><input type="number" min="5" max="30" data-bind="value: params.rho"></td>
+    </tr>
+    <tr>
+        <td>beta</td><td><input type="number" min="1" max="10" data-bind="value: params.beta"></td>
+    </tr>
+    </table>
+</body>
+</html>
