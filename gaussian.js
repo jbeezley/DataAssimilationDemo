@@ -46,7 +46,6 @@ function Gaussian(selection) {
         }
         var data = d3.range(n).map(gausDensity);
         d3.select('.gaussian').datum(data).attr('d', line);
-        debugger
     }
 
     return draw;

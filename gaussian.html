@@ -6,6 +6,19 @@
     <script src="knockout.js"></script>
     <script src="http://d3js.org/d3.v3.min.js"></script>
     <script src="gaussian.js"></script>
+    <script>
+function init() {
+    var g = Gaussian('#gaus');
+    var i = 0;
+    function anim() {
+        requestAnimationFrame(anim);
+        var x = Math.sin(i++/100.0);
+        x = x*x;
+        g(0,x);
+    }
+    anim();
+}
+    </script>
 </head>
 <style>
 /*
@@ -30,7 +43,7 @@ body {
 }
 
 </style>
-<body onload="Gaussian('#gaus')(0,1)">
+<body onload="init()">
     <div id="gaus"></div>
 </body>
 </html>
