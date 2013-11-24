@@ -1,0 +1,72 @@
+
+<!DOCTYPE html>
+
+<html>
+<head>
+    <script src="http://d3js.org/d3.v3.min.js"></script>
+    <script src="plotlib.js"></script>
+    <script>
+        function init() {
+            var i = 0, j = 0, n = 500;
+            plt = new LinePlot({miny: -1, maxy: 1, domselect: '#plot', n: n});
+            plt.addPath(function () { return i; }, function () { return Math.sin(n*i++/5000); }, 'lineX');
+            plt.addPath(function () { return j; }, function () { return Math.cos(n*j++/5000); }, 'lineY');
+            function animate() {
+                requestAnimationFrame( animate );
+                plt.update();
+            }
+            animate();
+        }
+    </script>
+</head>
+<style>
+/*
+body {
+  font: 10px sans-serif;
+}
+ */
+.axis {
+    font: 12px sans-serif;
+}
+.axis path,
+.axis line {
+  fill: none;
+  stroke: #000;
+  shape-rendering: auto;
+}
+
+.border {
+    fill: #fff;
+    stroke: none;
+    stroke-width: 1px;
+}
+
+.linev {
+  fill: none;
+  stroke: black;
+  stroke-width: 1.5px;
+}
+
+.lineX {
+  fill: none;
+  stroke: steelblue;
+  stroke-width: 1.5px;
+}
+
+.lineY {
+  fill: none;
+  stroke: darkred;
+  stroke-width: 1.5px;
+}
+
+.lineZ {
+  fill: none;
+  stroke: darkgreen;
+  stroke-width: 1.5px;
+}
+
+</style>
+<body onload="init()">
+    <div id="plot"></div>
+</body>
+</html>
