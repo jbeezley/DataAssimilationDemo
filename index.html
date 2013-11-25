@@ -5,8 +5,38 @@
 <head>
     <script src="knockout.js"></script>
     <script src="http://d3js.org/d3.v3.min.js"></script>
-    <script src="main.js"></script>
     <script src="model.js"></script>
+    <script src="plotlib.js"></script>
+    <script>
+        function init () {
+            var n = 250;
+            var margin = { top: 0, right: 0, bottom: 0, left: 0 };
+            var width = 480, height = 150;
+            var model = initKFModel();
+            var pltX = new LinePlot({miny: -30, maxy: 30, domSelect: '#modelX', n: n, margin: margin, width: width, height: height});
+            var pltY = new LinePlot({miny: -30, maxy: 30, domSelect: '#modelY', n: n, margin: margin, width: width, height: height});
+            var pltZ = new LinePlot({miny: 0, maxy: 50, domSelect: '#modelZ', n: n, margin: margin, width: width, height: height});
+    
+            function updatePlts() {
+                pltX.update();
+                pltY.update();
+                pltZ.update();
+            }
+    
+            pltX.addPath(model.time, model.mean.x, 'lineX');
+            pltY.addPath(model.time, model.mean.y, 'lineY');
+            pltZ.addPath(model.time, model.mean.z, 'lineZ');
+    
+            updatePlts();
+            
+            function animate() {
+                requestAnimationFrame(animate);
+                model.update();
+                updatePlts();
+            }
+            animate();
+        }
+    </script>
 </head>
 <style>
 /*
@@ -22,6 +52,12 @@ body {
   fill: none;
   stroke: #000;
   shape-rendering: auto;
+}
+
+.border {
+    fill: #fff;
+    stroke: none;
+    stroke-width: 1px;
 }
 
 .lineX {
@@ -48,18 +84,13 @@ body {
     <div id="modelY"></div>
     <div id="modelZ"></div>
     <center>
-        <div data-bind="with: values">Values: <span data-bind="text: valString"></span></div>
+        <div data-bind="with: mean">Values: <span data-bind="text: valString"></span></div>
     <table>
         <tr>
-        <td><button data-bind="click: setPause">Pause</button></td>
-        <td><button data-bind="click: values.reset">Reset</button></td>
     </tr>
     </table>
     </center>
     <table border="1">
-    <tr>
-        <td>Speed:</td><td><input type="range" min="0" max="10" data-bind="value: speed"></td>
-    </tr>
     <tr>
         <td>sigma</td><td><input type="number" min="1" max="20" data-bind="value: params.sigma"></td>
     </tr>
