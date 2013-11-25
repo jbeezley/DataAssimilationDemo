@@ -4,9 +4,9 @@
 function makeModelPlot(model) {
     //var renderer = new THREE.WebGLRenderer();
     var renderer = new THREE.CanvasRenderer();
-    var width = 480, height = 360;
+    var width = 480, height = 450;
     renderer.setSize(width, height);
-    document.body.appendChild(renderer.domElement);
+    document.getElementById('vis3d').appendChild(renderer.domElement);
     var camera = new THREE.PerspectiveCamera(45, width / height, 1, 500);
     camera.position.set(0, 0, 100);
     camera.lookAt(new THREE.Vector3(0, 0, 0));
@@ -26,9 +26,9 @@ function makeModelPlot(model) {
 
     var i, x, y, z, v, colors = [], c, nPts = 100;
     for (i = 0; i < nPts; i++) {
-        x = model.values.x();
-        y = model.values.y();
-        z = model.values.z();
+        x = model.mean.x();
+        y = model.mean.y();
+        z = model.mean.z();
         v = new THREE.Vector3(x,y,z);
         geometry.vertices.push(v);
         c = new THREE.Color( 0xffffff );
@@ -42,9 +42,9 @@ function makeModelPlot(model) {
         var x, y, z, v;
         requestAnimationFrame( animate );
     
-        x = model.values.x();
-        y = model.values.y();
-        z = model.values.z();
+        x = model.mean.x();
+        y = model.mean.y();
+        z = model.mean.z();
         v = new THREE.Vector3(x,y,z);
         geometry.vertices.push(v);
         geometry.vertices.shift();
@@ -52,7 +52,6 @@ function makeModelPlot(model) {
         //geometry.colorsNeedUpdate = true;
 
         renderer.render(scene, camera);
-        model.updateStep();
         controls.update();
 
     }

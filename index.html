@@ -2,42 +2,6 @@
 <!DOCTYPE html>
 
 <html>
-<head>
-    <script src="knockout.js"></script>
-    <script src="http://d3js.org/d3.v3.min.js"></script>
-    <script src="model.js"></script>
-    <script src="plotlib.js"></script>
-    <script>
-        function init () {
-            var n = 250;
-            var margin = { top: 0, right: 0, bottom: 0, left: 0 };
-            var width = 480, height = 150;
-            var model = initKFModel();
-            var pltX = new LinePlot({miny: -30, maxy: 30, domSelect: '#modelX', n: n, margin: margin, width: width, height: height});
-            var pltY = new LinePlot({miny: -30, maxy: 30, domSelect: '#modelY', n: n, margin: margin, width: width, height: height});
-            var pltZ = new LinePlot({miny: 0, maxy: 50, domSelect: '#modelZ', n: n, margin: margin, width: width, height: height});
-    
-            function updatePlts() {
-                pltX.update();
-                pltY.update();
-                pltZ.update();
-            }
-    
-            pltX.addPath(model.time, model.mean.x, 'lineX');
-            pltY.addPath(model.time, model.mean.y, 'lineY');
-            pltZ.addPath(model.time, model.mean.z, 'lineZ');
-    
-            updatePlts();
-            
-            function animate() {
-                requestAnimationFrame(animate);
-                model.update();
-                updatePlts();
-            }
-            animate();
-        }
-    </script>
-</head>
 <style>
 /*
 body {
@@ -79,15 +43,63 @@ body {
 }
 
 </style>
+<head>
+    <script src="three.min.js"></script>
+    <script src="TrackballControls.js"></script>
+    <script src="knockout.js"></script>
+    <script src="http://d3js.org/d3.v3.min.js"></script>
+    <script src="vis3d.js"></script>
+    <script src="model.js"></script>
+    <script src="plotlib.js"></script>
+    <script>
+        function init () {
+            var n = 250;
+            var margin = { top: 0, right: 0, bottom: 0, left: 0 };
+            var width = 480, height = 150;
+            var model = initKFModel();
+            var pltX = new LinePlot({miny: -30, maxy: 30, domSelect: '#modelX', n: n, margin: margin, width: width, height: height});
+            var pltY = new LinePlot({miny: -30, maxy: 30, domSelect: '#modelY', n: n, margin: margin, width: width, height: height});
+            var pltZ = new LinePlot({miny: 0, maxy: 50, domSelect: '#modelZ', n: n, margin: margin, width: width, height: height});
+    
+            function updatePlts() {
+                pltX.update();
+                pltY.update();
+                pltZ.update();
+            }
+    
+            pltX.addPath(model.time, model.mean.x, 'lineX');
+            pltY.addPath(model.time, model.mean.y, 'lineY');
+            pltZ.addPath(model.time, model.mean.z, 'lineZ');
+    
+            updatePlts();
+            
+            function animate() {
+                requestAnimationFrame(animate);
+                model.update();
+                updatePlts();
+            }
+
+            makeModelPlot(model);
+            animate();
+        }
+    </script>
+</head>
 <body onload="init()">
-    <div id="modelX"></div>
-    <div id="modelY"></div>
-    <div id="modelZ"></div>
+    <table>
+        <tr>
+            <td id="modelX"></td>
+            <td rowspan="3" id="vis3d"></td>
+        </tr>
+        <tr>
+            <td id="modelY"></td>
+        </tr>
+        <tr>
+            <td id="modelZ"></td>
+        </tr>
+    </table>
     <center>
         <div data-bind="with: mean">Values: <span data-bind="text: valString"></span></div>
     <table>
-        <tr>
-    </tr>
     </table>
     </center>
     <table border="1">

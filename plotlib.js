@@ -26,7 +26,10 @@ function LinePlot(opts) {
         .x(function (d, i) { return xs(i); })
         .y(function (d)    { return ys(d); });
     
-    var svg = d3.select(domselect).append('svg')
+    var svg = d3.select(domselect)
+        .attr('width', width + margin.left + margin.right)
+        .attr('height', height + margin.top + margin.bottom)
+      .append('svg')
         .attr('width', width + margin.left + margin.right)
         .attr('height', height + margin.top + margin.bottom)
       .append('g')
