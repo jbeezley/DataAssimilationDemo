@@ -3,6 +3,12 @@
 'use strict';
 
 function initKFModel() {
+    function frk(x, y, z, sigma, rho, beta) {
+
+        return [ sigma * (y - x),
+                 x * (rho - z) - y,
+                 x * y - beta * z ];
+    }
     function LorenzValues(x0, s0, x1, s1, x2, s2) {
         var self = this;
         var n = 3;
@@ -70,12 +76,6 @@ function initKFModel() {
         };
         this.values = val || new LorenzValues();
 
-        function frk(x, y, z, sigma, rho, beta) {
-
-            return [ sigma * (y - x),
-                     x * (rho - z) - y,
-                     x * y - beta * z ];
-        }
         this.updateStep = function (dt) {
             if (dt === 0.0) { return; }
             var x = this.values.x(),
@@ -115,7 +115,6 @@ function initKFModel() {
         var that = this;
         function updateCovStep(dt) {
             if (dt === 0.0) { return; }
-            var t2 = dt*dt;
             var x = that.mean.x(),
                 y = that.mean.y(),
                 z = that.mean.z();
@@ -125,28 +124,25 @@ function initKFModel() {
             var q11 = that.cov.x.x(),
                 q12 = that.cov.x.y(),
                 q13 = that.cov.x.z(),
-                q21 = that.cov.y.x(),
                 q22 = that.cov.y.y(),
                 q23 = that.cov.y.z(),
-                q31 = that.cov.z.x(),
-                q32 = that.cov.z.y(),
                 q33 = that.cov.z.z();
             var r11, r12, r13, r22, r23, r33;
 
             // generated from isympy M * Q * M.T
-            r11=sigma*sigma*(q11 - q12 - q21 + q22);
-            r12=sigma*(q12 - q22 + x*(q13 - q23) - (q11 - q21)*(rho - z));
-            r13=sigma*(beta*(q13 - q23) - x*(q12 - q22) - y*(q11 - q21));
-            r22=-q12*(rho - z) + q22 + q32*x + x*(-q13*(rho - z) + q23 + q33*x) - (rho - z)*(-q11*(rho - z) + q21 + q31*x);
-            r23=beta*(-q13*(rho - z) + q23 + q33*x) - x*(-q12*(rho - z) + q22 + q32*x) - y*(-q11*(rho - z) + q21 + q31*x);
-            r33=-beta*(-beta*q33 + q13*y + q23*x) + x*(-beta*q32 + q12*y + q22*x) + y*(-beta*q31 + q11*y + q21*x);
+            r11 =  dt*sigma*(dt*q22*sigma - q12*(dt*sigma - 1)) - (dt*sigma - 1)*(dt*q12*sigma - q11*(dt*sigma - 1)) ;
+            r12 =  -dt*x*(dt*q23*sigma - q13*(dt*sigma - 1)) + dt*(rho - z)*(dt*q12*sigma - q11*(dt*sigma - 1)) - (dt - 1)*(dt*q22*sigma - q12*(dt*sigma - 1)) ;
+            r13 =  dt*x*(dt*q22*sigma - q12*(dt*sigma - 1)) + dt*y*(dt*q12*sigma - q11*(dt*sigma - 1)) - (beta*dt - 1)*(dt*q23*sigma - q13*(dt*sigma - 1)) ;
+            r22 =  dt*x*(-dt*q13*(rho - z) + dt*q33*x + q23*(dt - 1)) - dt*(rho - z)*(-dt*q11*(rho - z) + dt*q13*x + q12*(dt - 1)) + (dt - 1)*(-dt*q12*(rho - z) + dt*q23*x + q22*(dt - 1)) ;
+            r23 =  -dt*x*(-dt*q12*(rho - z) + dt*q23*x + q22*(dt - 1)) - dt*y*(-dt*q11*(rho - z) + dt*q13*x + q12*(dt - 1)) + (beta*dt - 1)*(-dt*q13*(rho - z) + dt*q33*x + q23*(dt - 1)) ;
+            r33 =  dt*x*(dt*q12*y + dt*q22*x - q23*(beta*dt - 1)) + dt*y*(dt*q11*y + dt*q12*x - q13*(beta*dt - 1)) - (beta*dt - 1)*(dt*q13*y + dt*q23*x - q33*(beta*dt - 1)) ;
             
-            that.cov.x.x(q11 + r11*t2);
-            that.cov.x.y(q12 + r12*t2);
-            that.cov.x.z(q13 + r13*t2);
-            that.cov.y.y(q22 + r22*t2);
-            that.cov.y.z(q23 + r23*t2);
-            that.cov.z.z(q33 + r33*t2);
+            that.cov.x.x(r11);
+            that.cov.x.y(r12);
+            that.cov.x.z(r13);
+            that.cov.y.y(r22);
+            that.cov.y.z(r23);
+            that.cov.z.z(r33);
         }
 
         var cov = [[std[0]*std[0], 0, 0],
@@ -154,7 +150,7 @@ function initKFModel() {
                    [0, 0, std[2]*std[2]]];
         var val = new LorenzValues(mean[0], std[0], mean[1], std[1], mean[2], std[2]);
         var mod = new LorenzModel(val, sigma, rho, beta);
-        this.errStep = ko.observable(.001); //mod.dtStep;
+        this.errStep = ko.observable(0.01); //mod.dtStep;
         this.mean = val;
         this.cov = new LorenzCov(cov);
         this.params = mod.params;
@@ -172,8 +168,8 @@ function initKFModel() {
             mod.update(dt - dS*n);
         };
     }
-    
-    var kfmod = new KFModel([-5,5,10],[1,1,1]);
+     
+    var kfmod = new KFModel([-5,5,10],[0.1,0.1,0.1]);
     
     ko.applyBindings(kfmod);
     return kfmod;
