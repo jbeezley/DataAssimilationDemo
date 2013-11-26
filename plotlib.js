@@ -6,7 +6,8 @@ function LinePlot(opts) {
     'use strict';
 
     var miny = opts.miny || -10,
-        maxy = opts.maxy || 10;
+        maxy = opts.maxy || 10,
+        rng = maxy - miny;
     var n = opts.n || 500;
     var data = [];
     var margin = opts.margin || { top: 20, right: 20, bottom: 20, left: 20 };
@@ -24,7 +25,7 @@ function LinePlot(opts) {
 
     var line = d3.svg.line()
         .x(function (d, i) { return xs(i); })
-        .y(function (d)    { return ys(d); });
+        .y(function (d)    { return ys(d[0]); });
     
     var svg = d3.select(domselect)
         .attr('width', width + margin.left + margin.right)
@@ -41,7 +42,12 @@ function LinePlot(opts) {
         .attr('width', width + 2)
         .attr('height', height + 2)
         .attr('class', 'border');
-    
+
+    var area = d3.svg.area()
+        .x(function (d,i) { return xs(i); })
+        .y0(function (d) { return ys(d[0] - d[1]); })
+        .y1(function (d) { return ys(d[0] + d[1]); });
+
     if (opts.ylabel) {
         svg.append('text')
             .attr('class', 'y label')
@@ -52,21 +58,30 @@ function LinePlot(opts) {
             .text(opts.ylabel);
     }
     
-    this.addPath = function (x, y, cls) {
+    this.addPath = function (x, y, cls, s) {
+        s = s || function () { return 0; };
         var A = [];
         cls = cls || 'line';
-        var path = svg.append('g')
+        var pathg = svg.append('g');
+        var path = pathg
             .append('path')
               .datum(A)
               .attr('class', cls)
               .attr('d', line);
+
         var symbol = svg.append('g')
             .attr('class', cls)
             .style('display', 'none');
         var x0;
         symbol.append('circle')
             .attr('r', 4);
-        data.push( {x: x, y: y, data: A, path: path, symbol: symbol,
+        var std = pathg
+            .append('path')
+              .datum(A)
+              .attr('class', cls+"Area")
+              .attr('opacity', 0.2)
+              .attr('d', area);
+        data.push( {x: x, y: y, s: s, data: A, path: path, std: std, symbol: symbol,
             tranSym: function (x) {
                 var y0;
                 x0 = x || x0;
@@ -85,12 +100,17 @@ function LinePlot(opts) {
         
         for (i = 0; i < data.length; i++) {
             d = data[i];
-            d.data.push(d.y());
+            d.data.push([d.y(), Math.min(Math.sqrt(d.s()), rng)]);
             if (d.data.length > n) {
                 s = s0;
                 d.data.shift();
             }
             d.path.attr('d', line)
+                .attr('transform', null)
+              .transition()
+                .ease('linear')
+                .attr('transform', 'translate(' + s + ',0)');
+            d.std.attr('d', area)
                 .attr('transform', null)
               .transition()
                 .ease('linear')

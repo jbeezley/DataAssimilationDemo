@@ -30,16 +30,31 @@ body {
   stroke-width: 1.5px;
 }
 
+.lineXArea {
+  fill: steelblue;
+  stroke: none;
+}
+
 .lineY {
   fill: none;
   stroke: darkred;
   stroke-width: 1.5px;
 }
 
+.lineYArea {
+  fill: darkred;
+  stroke: none;
+}
+
 .lineZ {
   fill: none;
   stroke: darkgreen;
   stroke-width: 1.5px;
+}
+
+.lineZArea {
+  fill: darkgreen;
+  stroke: none;
 }
 
 </style>
@@ -67,15 +82,15 @@ body {
                 pltZ.update();
             }
     
-            pltX.addPath(model.time, model.mean.x, 'lineX');
-            pltY.addPath(model.time, model.mean.y, 'lineY');
-            pltZ.addPath(model.time, model.mean.z, 'lineZ');
+            pltX.addPath(model.time, model.mean.x, 'lineX', model.cov.x.x);
+            pltY.addPath(model.time, model.mean.y, 'lineY', model.cov.y.y);
+            pltZ.addPath(model.time, model.mean.z, 'lineZ', model.cov.z.z);
     
             updatePlts();
             
             function animate() {
                 requestAnimationFrame(animate);
-                model.update();
+                model.update(0.01);
                 updatePlts();
             }
 
@@ -85,7 +100,7 @@ body {
     </script>
 </head>
 <body onload="init()">
-    <table>
+    <table border="1">
         <tr>
             <td id="modelX"></td>
             <td rowspan="3" id="vis3d"></td>
@@ -99,6 +114,7 @@ body {
     </table>
     <center>
         <div data-bind="with: mean">Values: <span data-bind="text: valString"></span></div>
+        <div data-bind="with: cov">Errors: <span data-bind="text: valString"></span></div>
     <table>
     </table>
     </center>

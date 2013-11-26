@@ -31,6 +31,8 @@ function initKFModel() {
     }
 
     function LorenzCov(cov) {
+        var self = this;
+        var n = 3;
         cov = cov || [[1,0,0],[0,1,0],[0,0,1]];
         this.x = {
             x: ko.observable(cov[0][0]),
@@ -39,14 +41,19 @@ function initKFModel() {
         };
         this.y = {
             x: this.x.y,
-            y: ko.observable(cov[0][1]),
-            z: ko.observable(cov[0][2])
+            y: ko.observable(cov[1][1]),
+            z: ko.observable(cov[1][2])
         };
         this.z = {
             x: this.x.z,
             y: this.y.z,
-            z: ko.observable(cov[0][2])
+            z: ko.observable(cov[2][2])
         };
+        this.valString = ko.computed(function () {
+            return '[' + [Math.sqrt(self.x.x()).toFixed(n),
+                          Math.sqrt(self.y.y()).toFixed(n),
+                          Math.sqrt(self.z.z()).toFixed(n)].join(', ') + ']';
+        });
     }
 
     function LorenzModel(val, sigma, rho, beta) {
@@ -70,6 +77,7 @@ function initKFModel() {
                      x * y - beta * z ];
         }
         this.updateStep = function (dt) {
+            if (dt === 0.0) { return; }
             var x = this.values.x(),
                 y = this.values.y(),
                 z = this.values.z(),
@@ -78,7 +86,7 @@ function initKFModel() {
                 rho = this.params.rho(),
                 beta = this.params.beta();
             var a, b, c, d;
-            
+             
             a = frk(x, y, z, sigma, rho, beta);
             b = frk(x + dt * a[0]/2, y + dt * a[1]/2, z + dt * a[2]/2, sigma, rho, beta);
             c = frk(x + dt * b[0]/2, y + dt * b[1]/2, z + dt * b[2]/2, sigma, rho, beta);
@@ -95,10 +103,10 @@ function initKFModel() {
             var n = Math.floor(dt/dS);
             var i;
             if (dt < 0) { throw new Error("Negative time step"); }
-            for (i = 0; i < n - 1; i++) {
-                this.updateStep(this.dtStep());
+            for (i = 0; i < n ; i++) {
+                this.updateStep(dS);
             }
-            this.updateStep(dt - dS * (n-1));
+            this.updateStep(dt - dS * n);
         };
     }
 
@@ -106,6 +114,7 @@ function initKFModel() {
         
         var that = this;
         function updateCovStep(dt) {
+            if (dt === 0.0) { return; }
             var t2 = dt*dt;
             var x = that.mean.x(),
                 y = that.mean.y(),
@@ -145,7 +154,7 @@ function initKFModel() {
                    [0, 0, std[2]*std[2]]];
         var val = new LorenzValues(mean[0], std[0], mean[1], std[1], mean[2], std[2]);
         var mod = new LorenzModel(val, sigma, rho, beta);
-        this.errStep = ko.observable(0.01);
+        this.errStep = ko.observable(.001); //mod.dtStep;
         this.mean = val;
         this.cov = new LorenzCov(cov);
         this.params = mod.params;
@@ -155,15 +164,16 @@ function initKFModel() {
             dt = (dt === undefined) ? dS : dt;
             var n = Math.floor(dS/dt);
             var i;
-            mod.update(dt);
-            for (i = 0; i < n-1; i++) {
+            for (i = 0; i < n; i++) {
                 updateCovStep(dS);
+                mod.update(dS);
             }
-            updateCovStep(dt - dS*(n-1));
+            updateCovStep(dt - dS*n);
+            mod.update(dt - dS*n);
         };
     }
     
-    var kfmod = new KFModel([0,0,0],[10,10,10]);
+    var kfmod = new KFModel([-5,5,10],[1,1,1]);
     
     ko.applyBindings(kfmod);
     return kfmod;
