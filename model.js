@@ -2,7 +2,7 @@
 /* global d3, ko*/
 'use strict';
 
-function initKFModel() {
+function initKFModel(N) {
     function frk(x, y, z, sigma, rho, beta) {
 
         return [ sigma * (y - x),
@@ -168,8 +168,63 @@ function initKFModel() {
             mod.update(dt - dS*n);
         };
     }
-     
-    var kfmod = new KFModel([-5,5,10],[0.1,0.1,0.1]);
+    
+    function EnKFModel(mean, std, sigma, rho, beta, opts) {
+        opts = opts || {};
+        var N = opts.N || 10;
+        var values = [];
+        var models = [];
+        var i;
+        var that = this;
+        for (i = 0; i < N; i++) {
+            values.push(new LorenzValues(mean[0], std[0], mean[1], std[1], mean[2], std[2]));
+            models.push(new LorenzModel(values[i], sigma, rho, beta));
+        }
+        function updateMean() {
+            that.mean.x(values.reduce(function (s, m) { return s + m.x(); }, 0)/N);
+            that.mean.y(values.reduce(function (s, m) { return s + m.y(); }, 0)/N);
+            that.mean.z(values.reduce(function (s, m) { return s + m.z(); }, 0)/N);
+        }
+        function updateCov() {
+            var x0 = that.mean.x(), y0 = that.mean.y(), z0 = that.mean.z();
+            var m = N-1;
+            var cov = [[0,0,0],[0,0,0],[0,0,0]];
+            values.forEach(function (v) {
+                cov[0][0] += v.x() * v.x();
+                cov[0][1] += v.x() * v.y();
+                cov[0][2] += v.x() * v.z();
+                cov[1][1] += v.y() * v.y();
+                cov[1][2] += v.y() * v.z();
+                cov[2][2] += v.z() * v.z();
+            });
+            that.cov.x.x( (cov[0][0] - x0*x0) / m );
+            that.cov.x.y( (cov[0][1] - x0*y0) / m );
+            that.cov.x.z( (cov[0][2] - x0*z0) / m );
+            that.cov.y.y( (cov[1][1] - y0*y0) / m );
+            that.cov.y.z( (cov[1][2] - y0*z0) / m );
+            that.cov.z.z( (cov[2][2] - z0*z0) / m );
+        }
+        this.mean = new LorenzValues();
+        this.cov = new LorenzCov();
+        this.update = function (dt) {
+            var i;
+            for (i = 0; i < N; i++) {
+                models[i].update(dt);
+                updateMean();
+                updateCov();
+            }
+        };
+        this.params = models[0].params;
+        this.time = models[0].time;
+        this.ensemble = values;
+    }
+    
+    var kfmod;
+    if (N) {
+        kfmod = new EnKFModel([-5,5,10],[0.1,0.1,0.1],null,null,null,{N:N});
+    } else {
+        kfmod = new KFModel([-5,5,10],[0.1,0.1,0.1],null,null,null,{});
+    }
     
     ko.applyBindings(kfmod);
     return kfmod;

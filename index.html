@@ -68,10 +68,10 @@ body {
     <script src="plotlib.js"></script>
     <script>
         function init () {
-            var n = 250;
+            var n = 250, Nens=0, i;
             var margin = { top: 0, right: 0, bottom: 0, left: 0 };
             var width = 480, height = 150;
-            var model = initKFModel();
+            var model = initKFModel(Nens);
             var pltX = new LinePlot({miny: -30, maxy: 30, domSelect: '#modelX', n: n, margin: margin, width: width, height: height});
             var pltY = new LinePlot({miny: -30, maxy: 30, domSelect: '#modelY', n: n, margin: margin, width: width, height: height});
             var pltZ = new LinePlot({miny: 0, maxy: 50, domSelect: '#modelZ', n: n, margin: margin, width: width, height: height});
@@ -81,10 +81,15 @@ body {
                 pltY.update();
                 pltZ.update();
             }
-    
+            
             pltX.addPath(model.time, model.mean.x, 'lineX', model.cov.x.x);
             pltY.addPath(model.time, model.mean.y, 'lineY', model.cov.y.y);
             pltZ.addPath(model.time, model.mean.z, 'lineZ', model.cov.z.z);
+            for (i = 0; i < Nens; i++) {
+                pltX.addPath(model.time, model.ensemble[i].x, 'lineX');
+                pltY.addPath(model.time, model.ensemble[i].y, 'lineY');
+                pltZ.addPath(model.time, model.ensemble[i].z, 'lineZ');
+            }
     
             updatePlts();
             
