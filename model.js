@@ -187,7 +187,6 @@ function initKFModel(N) {
         }
         function updateCov() {
             var x0 = that.mean.x(), y0 = that.mean.y(), z0 = that.mean.z();
-            var m = N-1;
             var cov = [[0,0,0],[0,0,0],[0,0,0]];
             values.forEach(function (v) {
                 cov[0][0] += v.x() * v.x();
@@ -197,12 +196,12 @@ function initKFModel(N) {
                 cov[1][2] += v.y() * v.z();
                 cov[2][2] += v.z() * v.z();
             });
-            that.cov.x.x( (cov[0][0] - x0*x0) / m );
-            that.cov.x.y( (cov[0][1] - x0*y0) / m );
-            that.cov.x.z( (cov[0][2] - x0*z0) / m );
-            that.cov.y.y( (cov[1][1] - y0*y0) / m );
-            that.cov.y.z( (cov[1][2] - y0*z0) / m );
-            that.cov.z.z( (cov[2][2] - z0*z0) / m );
+            that.cov.x.x( cov[0][0]/N - x0*x0 );
+            that.cov.x.y( cov[0][1]/N - x0*y0 );
+            that.cov.x.z( cov[0][2]/N - x0*z0 );
+            that.cov.y.y( cov[1][1]/N - y0*y0 );
+            that.cov.y.z( cov[1][2]/N - y0*z0 );
+            that.cov.z.z( cov[2][2]/N - z0*z0 );
         }
         this.mean = new LorenzValues();
         this.cov = new LorenzCov();

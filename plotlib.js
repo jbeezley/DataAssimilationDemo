@@ -59,28 +59,33 @@ function LinePlot(opts) {
     }
     
     this.addPath = function (x, y, cls, s) {
+        var pth = !s;
         s = s || function () { return 0; };
         var A = [];
         cls = cls || 'line';
         var pathg = svg.append('g');
-        var path = pathg
+        var path, std, x0, symbol;
+        if (pth) {
+        path = pathg
             .append('path')
               .datum(A)
               .attr('class', cls)
               .attr('d', line);
-
-        var symbol = svg.append('g')
+        /*
+        symbol = svg.append('g')
             .attr('class', cls)
             .style('display', 'none');
-        var x0;
         symbol.append('circle')
             .attr('r', 4);
-        var std = pathg
+        */
+        } else {
+        std = pathg
             .append('path')
               .datum(A)
               .attr('class', cls+"Area")
               .attr('opacity', 0.2)
               .attr('d', area);
+        }
         data.push( {x: x, y: y, s: s, data: A, path: path, std: std, symbol: symbol,
             tranSym: function (x) {
                 var y0;
@@ -105,17 +110,20 @@ function LinePlot(opts) {
                 s = s0;
                 d.data.shift();
             }
+            if (!d.std) {
             d.path.attr('d', line)
                 .attr('transform', null)
-              .transition()
-                .ease('linear')
-                .attr('transform', 'translate(' + s + ',0)');
+              //.transition()
+              //  .ease('linear')
+              //  .attr('transform', 'translate(' + s + ',0)');
+            } else {
             d.std.attr('d', area)
                 .attr('transform', null)
-              .transition()
-                .ease('linear')
-                .attr('transform', 'translate(' + s + ',0)');
-            d.tranSym();
+              //.transition()
+              //  .ease('linear')
+              //  .attr('transform', 'translate(' + s + ',0)');
+            }
+            //d.tranSym();
         }
     };
     /*

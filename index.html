@@ -85,10 +85,16 @@ body {
             pltX.addPath(model.time, model.mean.x, 'lineX', model.cov.x.x);
             pltY.addPath(model.time, model.mean.y, 'lineY', model.cov.y.y);
             pltZ.addPath(model.time, model.mean.z, 'lineZ', model.cov.z.z);
-            for (i = 0; i < Nens; i++) {
-                pltX.addPath(model.time, model.ensemble[i].x, 'lineX');
-                pltY.addPath(model.time, model.ensemble[i].y, 'lineY');
-                pltZ.addPath(model.time, model.ensemble[i].z, 'lineZ');
+            if (Nens) {
+                for (i = 0; i < Math.min(5,Nens); i++) {
+                    pltX.addPath(model.time, model.ensemble[i].x, 'lineX');
+                    pltY.addPath(model.time, model.ensemble[i].y, 'lineY');
+                    pltZ.addPath(model.time, model.ensemble[i].z, 'lineZ');
+                }
+            } else {
+                pltX.addPath(model.time, model.mean.x, 'lineX');
+                pltY.addPath(model.time, model.mean.y, 'lineY');
+                pltZ.addPath(model.time, model.mean.z, 'lineZ');
             }
     
             updatePlts();
