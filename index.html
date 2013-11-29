@@ -63,49 +63,74 @@ body {
     <script src="TrackballControls.js"></script>
     <script src="knockout.js"></script>
     <script src="http://d3js.org/d3.v3.min.js"></script>
-    <script src="vis3d.js"></script>
     <script src="model.js"></script>
     <script src="plotlib.js"></script>
     <script>
         function init () {
+
             var n = 250, Nens=0, i;
             var margin = { top: 0, right: 0, bottom: 0, left: 0 };
             var width = 480, height = 150;
-            var model = initKFModel(Nens);
+            var robj = initKFModel(Nens);
+            var model = robj.model, obs = robj.obs;
             var pltX = new LinePlot({miny: -30, maxy: 30, domSelect: '#modelX', n: n, margin: margin, width: width, height: height});
             var pltY = new LinePlot({miny: -30, maxy: 30, domSelect: '#modelY', n: n, margin: margin, width: width, height: height});
             var pltZ = new LinePlot({miny: 0, maxy: 50, domSelect: '#modelZ', n: n, margin: margin, width: width, height: height});
+            //var obsX = new LinePlot({miny: -30, maxy: 30, domSelect: '#obsX', n: n, margin: margin, width: width, height: height});
+            //var obsY = new LinePlot({miny: -30, maxy: 30, domSelect: '#obsY', n: n, margin: margin, width: width, height: height});
+            //var obsZ = new LinePlot({miny: 0, maxy: 50, domSelect: '#obsZ', n: n, margin: margin, width: width, height: height});
     
             function updatePlts() {
                 pltX.update();
                 pltY.update();
                 pltZ.update();
+                //obsX.update();
+                //obsY.update();
+                //obsZ.update();
             }
             
             pltX.addPath(model.time, model.mean.x, 'lineX', model.cov.x.x);
-            pltY.addPath(model.time, model.mean.y, 'lineY', model.cov.y.y);
-            pltZ.addPath(model.time, model.mean.z, 'lineZ', model.cov.z.z);
+            pltY.addPath(model.time, model.mean.y, 'lineX', model.cov.y.y);
+            pltZ.addPath(model.time, model.mean.z, 'lineX', model.cov.z.z);
+            pltX.addPath(model.time, function () { return obs.getObs(model.time(), 0); }, 'lineY');
+            pltY.addPath(model.time, function () { return obs.getObs(model.time(), 1); }, 'lineY');
+            pltZ.addPath(model.time, function () { return obs.getObs(model.time(), 2); }, 'lineY');
             if (Nens) {
                 for (i = 0; i < Math.min(5,Nens); i++) {
                     pltX.addPath(model.time, model.ensemble[i].x, 'lineX');
-                    pltY.addPath(model.time, model.ensemble[i].y, 'lineY');
-                    pltZ.addPath(model.time, model.ensemble[i].z, 'lineZ');
+                    pltY.addPath(model.time, model.ensemble[i].y, 'lineX');
+                    pltZ.addPath(model.time, model.ensemble[i].z, 'lineX');
                 }
             } else {
                 pltX.addPath(model.time, model.mean.x, 'lineX');
-                pltY.addPath(model.time, model.mean.y, 'lineY');
-                pltZ.addPath(model.time, model.mean.z, 'lineZ');
+                pltY.addPath(model.time, model.mean.y, 'lineX');
+                pltZ.addPath(model.time, model.mean.z, 'lineX');
             }
     
             updatePlts();
-            
+            var controls = model.controls;
+            controls.pauseButton = function () {
+                controls.paused(!controls.paused());
+                if (!controls.paused()) {
+                    animate();
+                }
+            }
+            var time, stime = 0;
             function animate() {
-                requestAnimationFrame(animate);
+                time = model.time();
+                if (time - stime > 0.5) {
+                    stime = time;
+                    model.assimilate(obs);
+                }
+                if (!controls.paused()) {
+                    requestAnimationFrame(animate);
+                }
                 model.update(0.01);
                 updatePlts();
             }
 
-            makeModelPlot(model);
+            //makeModelPlot(model);
+            ko.applyBindings(model);
             animate();
         }
     </script>
@@ -114,7 +139,6 @@ body {
     <table border="1">
         <tr>
             <td id="modelX"></td>
-            <td rowspan="3" id="vis3d"></td>
         </tr>
         <tr>
             <td id="modelY"></td>
@@ -129,6 +153,11 @@ body {
     <table>
     </table>
     </center>
+    <table>
+        <tr>
+            <td><button data-bind="click: controls.pauseButton">Pause</button></td>
+        </tr>
+    </table>
     <table border="1">
     <tr>
         <td>sigma</td><td><input type="number" min="1" max="20" data-bind="value: params.sigma"></td>

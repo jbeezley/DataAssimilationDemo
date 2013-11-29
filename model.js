@@ -3,12 +3,73 @@
 'use strict';
 
 function initKFModel(N) {
+    function invert(Q) {
+        // invert 3x3 symmetric matrix (from sympy 'inv.py')
+        var q11 = Q[0][0], q12 = Q[0][1], q13 = Q[0][2],
+                           q22 = Q[1][1], q23 = Q[1][2],
+                                          q33 = Q[2][2];
+        var d = 1.0/(q11*q22*q33 - q11*q23*q23 - q12*q12*q33 + 2*q12*q13*q23 - q13*q13*q22);
+        var r11 =  q22*q33 - q23*q23 ;
+        var r12 =  -q12*q33 + q13*q23 ;
+        var r13 =  q12*q23 - q13*q22 ;
+        var r22 =  q11*q33 - q13*q13 ;
+        var r23 =  -q11*q23 + q12*q13 ;
+        var r33 =  q11*q22 - q12*q12 ;
+
+        return [[r11*d,r12*d,r13*d],
+                [r12*d,r22*d,r23*d],
+                [r13*d,r23*d,r33*d]];
+    }
+    
+    function trans(A) {
+        var i, j, B;
+        if (!Array.isArray(A[0])) { A = [A]; }
+        B = [];
+        for (i = 0; i < A[0].length; i++) {
+            B.push([]);
+            for (j = 0; j < A.length; j++) {
+                B[i][j] = A[j][i];
+            }
+        }
+        return B;
+    }
+
+    function lincomb(a, A, b, B) {
+        var i, j, C;
+        if (!Array.isArray(B[0])) { B = [B]; }
+        C = [];
+        for (i = 0; i < A.length; i++) {
+            C.push([]);
+            for (j = 0; j < A[0].length; j++) {
+                C[i][j] = a * A[i][j] + b * B[i][j];
+            }
+        }
+        return C;
+    }
+
+    function matmul(A, B) {
+        var i, j, k, C;
+        if (!Array.isArray(B[0])) { B = [B]; }
+        C = [];
+        for (i = 0; i < A.length; i++) {
+            C.push([]);
+            for (j = 0; j < B[0].length; j++) {
+                C[i][j] = 0;
+                for (k = 0; k < A.length; k++) {
+                    C[i][j] += A[i][k] * B[k][j];
+                }
+            }
+        }
+        return C;
+    }
+
     function frk(x, y, z, sigma, rho, beta) {
 
         return [ sigma * (y - x),
                  x * (rho - z) - y,
                  x * y - beta * z ];
     }
+
     function LorenzValues(x0, s0, x1, s1, x2, s2) {
         var self = this;
         var n = 3;
@@ -109,7 +170,7 @@ function initKFModel(N) {
             this.updateStep(dt - dS * n);
         };
     }
-
+    
     function KFModel(mean, std, sigma, rho, beta, opts) {
         
         var that = this;
@@ -153,6 +214,7 @@ function initKFModel(N) {
         this.errStep = ko.observable(0.01); //mod.dtStep;
         this.mean = val;
         this.cov = new LorenzCov(cov);
+        cov = this.cov;
         this.params = mod.params;
         this.time = val.time;
         this.update = function (dt) {
@@ -166,6 +228,32 @@ function initKFModel(N) {
             }
             updateCovStep(dt - dS*n);
             mod.update(dt - dS*n);
+        };
+        this.assimilate = function (obs, ivar) {
+            var mmean = trans([[val.x(), val.y(), val.z()]]);
+            var mcov = [[cov.x.x(), cov.x.y(), cov.x.z()],
+                        [cov.y.x(), cov.y.y(), cov.y.z()],
+                        [cov.z.x(), cov.z.y(), cov.z.z()]];
+            var omean = trans(obs.getObs(val.time(),ivar));
+            var ocov = obs.getCov(val.time(),ivar);
+            var H = obs.getH(ivar);
+            var Ht = trans(H);
+
+            var y = lincomb(1,omean,-1,matmul(H, mmean));
+            var S = lincomb(1, matmul(matmul(H, mcov),Ht), 1, ocov);
+
+            var K = matmul(matmul(mcov, Ht), invert(S));
+            mmean = lincomb(1, mmean, 1, matmul(K, y));
+            mcov = matmul(lincomb(1,[[1,0,0],[0,1,0],[0,0,1]],-1,matmul(K,H)),mcov);
+
+            val.x(mmean[0][0]);
+            val.y(mmean[1][0]);
+            val.z(mmean[2][0]);
+
+            cov.x.x(mcov[0][0]); cov.x.y(mcov[0][1]); cov.x.z(mcov[0][2]);
+                                 cov.y.y(mcov[1][1]); cov.y.z(mcov[1][2]);
+                                                      cov.x.z(mcov[2][2]);
+
         };
     }
     
@@ -217,6 +305,50 @@ function initKFModel(N) {
         this.time = models[0].time;
         this.ensemble = values;
     }
+
+    function ObsModel(mean, std, sigma, rho, beta, opts) {
+        var values = new LorenzValues(mean[0], 0, mean[1], 0, mean[2], 0);
+        var model = new LorenzModel(values, sigma, rho, beta);
+        var itime = 0;
+        var cov = [[std[0], 0, 0],
+                   [0, std[1], 0],
+                   [0, 0, std[2]]];
+        this.getObs = function (time, ivar) {
+            if (time < itime) {
+                throw new Error('Cannot run model backward in time');
+            }
+            model.update(time - itime);
+            itime = time;
+            if (ivar === undefined) {
+                return [d3.random.normal(values.x(),std[0])(),
+                        d3.random.normal(values.y(),std[1])(),
+                        d3.random.normal(values.z(),std[2])()];
+            } else if (ivar === 0) {
+                return d3.random.normal(values.x(),std[0])();
+            } else if (ivar === 1) {
+                return d3.random.normal(values.y(),std[1])();
+            } else if (ivar === 2) {
+                return d3.random.normal(values.z(),std[2])();
+            }
+        };
+        this.getCov = function (time, ivar) {
+            if (ivar === undefined) {
+                return cov;
+            } else {
+                return [[cov[ivar][ivar]]];
+            }
+        };
+        this.getH = function (ivar) {
+            function val (j) {
+                return ( ivar === j ) ? 1 : 0;
+            }
+            if (ivar === undefined) {
+                return [[1,0,0],[0,1,0],[0,0,1]];
+            } else {
+                return [[val(0), val(1), val(2)]];
+            }
+        };
+    }
     
     var kfmod;
     if (N) {
@@ -224,7 +356,11 @@ function initKFModel(N) {
     } else {
         kfmod = new KFModel([-5,5,10],[0.1,0.1,0.1],null,null,null,{});
     }
+    var obs = new ObsModel([5,-5,12],[0.5,0.5,0.5],null,null,null,{});
     
-    ko.applyBindings(kfmod);
-    return kfmod;
+    kfmod.controls = {
+        paused: ko.observable(true)
+    };
+
+    return {model: kfmod, obs: obs};
 }
