@@ -128,13 +128,11 @@ function LinePlot(opts) {
             //d.tranSym();
         }
         for (i = 0; i < marks.length; i++) {
-            if (marks[i].draw() < 0) {
+            if (marks[i].draw() <= 0) {
                 shift++;
             }
         };
-        for (i = 0; i < shift; i++) {
-            marks.shift();
-        }
+        marks.splice(0, shift);
     };
     this.addMark = function (value, cls) {
         cls = cls || 'mark';
@@ -153,6 +151,7 @@ function LinePlot(opts) {
             }
             m.path.attr('transform', 'translate(' + x0 + ',' + ys(value) + ')')
                   .attr('d', m.symbol);
+            if (x0 <= 0) { m.path.remove(); }
             return x0;
         };
         marks.push(m);

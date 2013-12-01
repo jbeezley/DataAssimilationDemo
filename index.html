@@ -97,9 +97,9 @@ body {
             pltX.addPath(model.time, model.mean.x, 'lineX', model.cov.x.x);
             pltY.addPath(model.time, model.mean.y, 'lineX', model.cov.y.y);
             pltZ.addPath(model.time, model.mean.z, 'lineX', model.cov.z.z);
-            pltX.addPath(model.time, function () { return obs.getObs(model.time(), 0); }, 'lineY');
-            pltY.addPath(model.time, function () { return obs.getObs(model.time(), 1); }, 'lineY');
-            pltZ.addPath(model.time, function () { return obs.getObs(model.time(), 2); }, 'lineY');
+            pltX.addPath(model.time, function () { return obs.getObs(model.time(), 0, 0.0); }, 'lineY');
+            pltY.addPath(model.time, function () { return obs.getObs(model.time(), 1, 0.0); }, 'lineY');
+            pltZ.addPath(model.time, function () { return obs.getObs(model.time(), 2, 0.0); }, 'lineY');
             if (Nens) {
                 for (i = 0; i < Math.min(5,Nens); i++) {
                     pltX.addPath(model.time, model.ensemble[i].x, 'lineX');

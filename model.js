@@ -314,22 +314,23 @@ function initKFModel(N) {
         var cov = [[std[0], 0, 0],
                    [0, std[1], 0],
                    [0, 0, std[2]]];
-        this.getObs = function (time, ivar) {
+        this.getObs = function (time, ivar, err) {
+            err = (err === undefined ? 1.0 : err);
             if (time < itime) {
                 throw new Error('Cannot run model backward in time');
             }
             model.update(time - itime);
             itime = time;
             if (ivar === undefined) {
-                return [d3.random.normal(values.x(),std[0])(),
-                        d3.random.normal(values.y(),std[1])(),
-                        d3.random.normal(values.z(),std[2])()];
+                return [d3.random.normal(values.x(),std[0]*err)(),
+                        d3.random.normal(values.y(),std[1]*err)(),
+                        d3.random.normal(values.z(),std[2]*err)()];
             } else if (ivar === 0) {
-                return d3.random.normal(values.x(),std[0])();
+                return d3.random.normal(values.x(),std[0]*err)();
             } else if (ivar === 1) {
-                return d3.random.normal(values.y(),std[1])();
+                return d3.random.normal(values.y(),std[1]*err)();
             } else if (ivar === 2) {
-                return d3.random.normal(values.z(),std[2])();
+                return d3.random.normal(values.z(),std[2]*err)();
             }
         };
         this.getCov = function (time, ivar) {
@@ -357,7 +358,7 @@ function initKFModel(N) {
     } else {
         kfmod = new KFModel([-5,5,10],[0.1,0.1,0.1],null,null,null,{});
     }
-    var obs = new ObsModel([5,-5,12],[0.5,0.5,0.5],null,null,null,{});
+    var obs = new ObsModel([5,-5,12],[1,1,1],null,null,null,{});
     
     kfmod.controls = {
         paused: ko.observable(true)
