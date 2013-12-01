@@ -253,6 +253,7 @@ function initKFModel(N) {
             cov.x.x(mcov[0][0]); cov.x.y(mcov[0][1]); cov.x.z(mcov[0][2]);
                                  cov.y.y(mcov[1][1]); cov.y.z(mcov[1][2]);
                                                       cov.x.z(mcov[2][2]);
+            return [omean[0][0], omean[1][0], omean[2][0]];
 
         };
     }

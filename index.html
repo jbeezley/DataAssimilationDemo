@@ -57,6 +57,11 @@ body {
   stroke: none;
 }
 
+.mark {
+    fill: none;
+    stroke: darkred;
+}
+
 </style>
 <head>
     <script src="three.min.js"></script>
@@ -117,10 +122,14 @@ body {
             }
             var time, stime = 0;
             function animate() {
+                var vals;
                 time = model.time();
                 if (time - stime > 0.5) {
                     stime = time;
-                    model.assimilate(obs);
+                    vals = model.assimilate(obs);
+                    pltX.addMark(vals[0]);
+                    pltY.addMark(vals[1]);
+                    pltZ.addMark(vals[2]);
                 }
                 if (!controls.paused()) {
                     requestAnimationFrame(animate);

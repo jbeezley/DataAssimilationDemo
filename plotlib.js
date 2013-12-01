@@ -26,6 +26,9 @@ function LinePlot(opts) {
     var line = d3.svg.line()
         .x(function (d, i) { return xs(i); })
         .y(function (d)    { return ys(d[0]); });
+
+    var marks = [];
+    var timeNow = 0;
     
     var svg = d3.select(domselect)
         .attr('width', width + margin.left + margin.right)
@@ -99,10 +102,9 @@ function LinePlot(opts) {
     
     var s0 = xs(-1).toString();
     this.update = function () {
-        var s = '0', i, d;
-        
+        var s = '0', i, d, shift = 0;
         if (data.length === 0) { return; }
-        
+        timeNow++;
         for (i = 0; i < data.length; i++) {
             d = data[i];
             d.data.push([d.y(), Math.min(Math.sqrt(d.s()), rng)]);
@@ -112,19 +114,48 @@ function LinePlot(opts) {
             }
             if (!d.std) {
             d.path.attr('d', line)
-                .attr('transform', null)
+              //  .attr('transform', null)
               //.transition()
               //  .ease('linear')
               //  .attr('transform', 'translate(' + s + ',0)');
             } else {
             d.std.attr('d', area)
-                .attr('transform', null)
+              //  .attr('transform', null)
               //.transition()
               //  .ease('linear')
               //  .attr('transform', 'translate(' + s + ',0)');
             }
             //d.tranSym();
         }
+        for (i = 0; i < marks.length; i++) {
+            if (marks[i].draw() < 0) {
+                shift++;
+            }
+        };
+        for (i = 0; i < shift; i++) {
+            marks.shift();
+        }
+    };
+    this.addMark = function (value, cls) {
+        cls = cls || 'mark';
+        var m = {};
+        m.path = svg.append('g')
+                    .attr('class', cls)
+                  .append('path');
+        m.time = timeNow;
+        m.symbol = d3.svg.symbol().type('circle');
+        m.draw = function () {
+            var x0;
+            if (timeNow > n - 1) {
+                x0 = xs(n - 1 + m.time - timeNow);
+            } else {
+                x0 = xs(m.time);
+            }
+            m.path.attr('transform', 'translate(' + x0 + ',' + ys(value) + ')')
+                  .attr('d', m.symbol);
+            return x0;
+        };
+        marks.push(m);
     };
     /*
     var vline = svg.append('g')
